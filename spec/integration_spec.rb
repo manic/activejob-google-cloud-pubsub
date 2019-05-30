@@ -1,7 +1,6 @@
 require 'spec_helper'
 
 require 'json'
-require 'thread'
 require 'timeout'
 
 RSpec.describe ActiveJob::GoogleCloudPubsub, :use_pubsub_emulator do
@@ -12,7 +11,8 @@ RSpec.describe ActiveJob::GoogleCloudPubsub, :use_pubsub_emulator do
   end
 
   around :all do |example|
-    orig, ActiveJob::Base.logger = ActiveJob::Base.logger, nil
+    orig = ActiveJob::Base.logger
+    ActiveJob::Base.logger = nil
 
     begin
       example.run
@@ -24,7 +24,7 @@ RSpec.describe ActiveJob::GoogleCloudPubsub, :use_pubsub_emulator do
   around :each do |example|
     $queue = Thread::Queue.new
 
-    run_worker pubsub: Google::Cloud::Pubsub.new(emulator_host: @pubsub_emulator_host, project_id: 'activejob-test'), &example
+    run_worker pubsub: Google::Cloud::Pubsub.new(emulator_host: @pubsub_emulator_host, project_id: 'activejob-test', timeout: 60), &example
   end
 
   example do
@@ -32,7 +32,7 @@ RSpec.describe ActiveJob::GoogleCloudPubsub, :use_pubsub_emulator do
     GreetingJob.set(wait: 0.1).perform_later 'bob'
     GreetingJob.set(wait_until: Time.now + 0.2).perform_later 'charlie'
 
-    Timeout.timeout 3 do
+    Timeout.timeout 30 do
       expect(3.times.map { $queue.pop }).to contain_exactly(
         'hello, alice!',
         'hello, bob!',
@@ -48,14 +48,14 @@ RSpec.describe ActiveJob::GoogleCloudPubsub, :use_pubsub_emulator do
 
     worker.ensure_subscription
 
-    thread = Thread.new {
+    thread = Thread.new do
       worker.run
-    }
+    end
 
     thread.abort_on_exception = true
 
     block.call
   ensure
-    thread.kill if thread
+    thread&.kill
   end
 end

@@ -1,14 +1,14 @@
 # ActiveJob::GoogleCloudPubsub
 
-[![Build Status](https://travis-ci.org/ursm/activejob-google_cloud_pubsub.svg?branch=master)](https://travis-ci.org/ursm/activejob-google_cloud_pubsub)
-[![Gem Version](https://badge.fury.io/rb/activejob-google_cloud_pubsub.svg)](https://badge.fury.io/rb/activejob-google_cloud_pubsub)
+[![Build Status](https://travis-ci.org/magloft/activejob-google-cloud-pubsub.svg?branch=master)](https://travis-ci.org/magloft/activejob-google-cloud-pubsub)
+[![Gem Version](https://badge.fury.io/magloft/activejob-google-cloud-pubsub.svg)](https://badge.fury.io/magloft/activejob-google-cloud-pubsub)
 
 Google Cloud Pub/Sub adapter and worker for ActiveJob
 
 ## Installation
 
 ```ruby
-gem 'activejob-google_cloud_pubsub'
+gem 'activejob-google-cloud-pubsub'
 ```
 
 ## Usage
@@ -48,7 +48,7 @@ $ gcloud beta emulators pubsub start
 
 $ eval `gcloud beta emulators pubsub env-init`
 $ cd path/to/your-app
-$ bundle exec activejob-google_cloud_pubsub-worker --project_id=dummy
+$ bundle exec activejob-google-cloud-pubsub-worker --project_id=dummy
 ```
 
 If you hit the previous action, the job will be executed.
@@ -67,7 +67,8 @@ Rails.application.config.active_job.queue_adapter = ActiveJob::GoogleCloudPubsub
 
   pubsub: Google::Cloud::Pubsub.new(
     project_id:  'MY-PROJECT-ID',
-    credentials: 'path/to/keyfile.json'
+    credentials: 'path/to/keyfile.json',
+    timeout: 60
   )
 )
 ```
@@ -88,7 +89,7 @@ Default: `Logger.new($stdout)`
 
 The instance of `Google::Cloud::Pubsub::Project`. Please see [`Google::Cloud::Pubsub.new`](http://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-pubsub/master/google/cloud/pubsub?method=new-class) for details.
 
-Default: `Google::Cloud::Pubsub.new`
+Default: `Google::Cloud::Pubsub.new(timeout: 60)`
 
 ### Worker
 
@@ -107,18 +108,6 @@ The name of the queue the worker handles.
 Note: One worker can handle only one queue. If you use multiple queues, you need to launch multiple worker processes.
 
 Default: `default`
-
-#### `--min_threads=N`
-
-Minimum number of worker threads.
-
-Default: `0`
-
-#### `--max_threads=N`
-
-Maximum number of worker threads.
-
-Default: number of logical cores
 
 #### `--project_id=PROJECT_ID`, `--credentials=KEYFILE_PATH`
 

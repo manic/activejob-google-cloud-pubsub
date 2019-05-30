@@ -1,6 +1,6 @@
 require 'bundler/setup'
 
-require 'activejob-google_cloud_pubsub'
+require 'activejob_google_cloud_pubsub'
 require 'timeout'
 
 RSpec.configure do |config|
@@ -13,9 +13,10 @@ RSpec.configure do |config|
 
   config.around :each, use_pubsub_emulator: true do |example|
     run_pubsub_emulator do |host|
-      pubsub = Google::Cloud::Pubsub.new(emulator_host: host, project_id: 'activejob-test')
+      pubsub = Google::Cloud::Pubsub.new(emulator_host: host, project_id: 'activejob-test', timeout: 60)
 
-      orig, ActiveJob::Base.queue_adapter = ActiveJob::Base.queue_adapter, ActiveJob::GoogleCloudPubsub::Adapter.new(pubsub: pubsub)
+      orig = ActiveJob::Base.queue_adapter
+      ActiveJob::Base.queue_adapter = ActiveJob::GoogleCloudPubsub::Adapter.new(pubsub: pubsub)
 
       begin
         @pubsub_emulator_host = host
@@ -30,7 +31,7 @@ RSpec.configure do |config|
   private
 
   def run_pubsub_emulator(&block)
-    pipe = IO.popen('gcloud beta emulators pubsub start', err: %i(child out), pgroup: true)
+    pipe = IO.popen('gcloud beta emulators pubsub start', err: [:child, :out], pgroup: true)
 
     begin
       Timeout.timeout 10 do
