@@ -19,7 +19,7 @@ module ActiveJob
       end
 
       def run
-        subscriber = @pubsub.subscription_for(@queue_name).listen do |message|
+        subscriber = @pubsub.subscription_for(@queue_name).listen(streams: 1, threads: { callback: 1 }) do |message|
           @logger&.info "Message(#{message.message_id}) was received."
           process message
         end
