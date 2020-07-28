@@ -41,9 +41,7 @@ module ActiveJob
 
         subscriber.start
 
-        until @quit
-          sleep 1
-        end
+        sleep 1 until @quit
         @logger&.info "Shutting down..."
         subscriber.stop.wait!
         @logger&.info "Shut down."
