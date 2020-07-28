@@ -6,10 +6,6 @@ Style/SymbolArray:
 Style/ClassCheck:
   EnforcedStyle: kind_of?
 
-# It's better to be more explicit about the type
-Style/BracesAroundHashParameters:
-  Enabled: false
-
 Style/TernaryParentheses:
   Enabled: true
   EnforcedStyle: require_parentheses_when_complex
@@ -20,10 +16,10 @@ Lint/UselessAssignment:
     - '**/spec/**/*'
 
 # We could potentially enable the 2 below:
-Layout/IndentFirstHashElement:
+Layout/FirstHashElementIndentation:
   Enabled: false
 
-Layout/AlignHash:
+Layout/HashAlignment:
   Enabled: false
 
 # HoundCI doesn't like this rule
@@ -38,7 +34,7 @@ Style/NumericPredicate:
   Enabled: false
 
 # Sometimes we allow a rescue block that doesn't contain code
-Lint/HandleExceptions:
+Lint/SuppressedException:
   Enabled: false
 
 Style/RescueStandardError:
@@ -185,8 +181,12 @@ Style/ClassVars:
 Style/FrozenStringLiteralComment:
   Enabled: false
 
+Style/MultilineBlockChain:
+  Enabled: false
+
 AllCops:
-  TargetRubyVersion: "2.3.3"
+  TargetRubyVersion: 2.6
+  NewCops: enable
   Exclude:
     - './tmp/**/*'
     - './Gemfile'
