@@ -10,14 +10,15 @@ module ActiveJob
     class Worker
       using PubsubExtension
 
-      def initialize(queue: 'default', pubsub: Google::Cloud::Pubsub.new(timeout: 60), logger: Logger.new($stdout))
+      def initialize(queue: 'default', pubsub: Google::Cloud::Pubsub.new(timeout: 60), logger: Logger.new($stdout), worker: nil)
         @queue_name  = queue
+        @worker_name = worker || "#{queue}-worker"
         @pubsub      = pubsub
         @logger      = logger
       end
 
       def run
-        subscriber = @pubsub.subscription_for(@queue_name).listen(streams: 1, threads: { callback: 1 }) do |message|
+        subscriber = @pubsub.subscription_for(@queue_name, worker_name: @worker_name).listen(streams: 1, threads: { callback: 1 }) do |message|
           @logger&.info "Message(#{message.message_id}) was received."
           process message
         end
@@ -48,7 +49,7 @@ module ActiveJob
       end
 
       def ensure_subscription
-        @pubsub.subscription_for @queue_name
+        @pubsub.subscription_for @queue_name, worker_name: @worker_name
 
         nil
       end
@@ -71,7 +72,11 @@ module ActiveJob
           succeeded = false
           failed    = false
 
-          ActiveJob::Base.execute JSON.parse(message.data)
+          if klass = ActiveJob::GoogleCloudPubsub.fetch_class(message.attributes['action']).safe_constantize
+            klass.perform_later(*ActiveJob::Arguments.deserialize(JSON.parse(message.data)))
+          else
+            ActiveJob::Base.execute JSON.parse(message.data)
+          end
 
           succeeded = true
         rescue StandardError

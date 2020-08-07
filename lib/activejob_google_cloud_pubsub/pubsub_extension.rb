@@ -5,14 +5,11 @@ module ActiveJob
     module PubsubExtension
       refine Google::Cloud::Pubsub::Project do
         def topic_for(queue_name)
-          name = "activejob-queue-#{queue_name}"
-
-          topic(name) || create_topic(name)
+          topic(queue_name) || create_topic(queue_name)
         end
 
-        def subscription_for(queue_name)
-          name = "activejob-worker-#{queue_name}"
-
+        def subscription_for(queue_name, worker_name: nil)
+          name = worker_name || "#{queue_name}-worker"
           subscription(name) || topic_for(queue_name).subscribe(name)
         end
       end
